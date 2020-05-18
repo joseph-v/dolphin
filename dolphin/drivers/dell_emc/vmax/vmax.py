@@ -93,7 +93,8 @@ class VMAXStorageDriver(driver.StorageDriver):
         pass
 
     def list_volumes(self, context):
-        pass
+        self._check_connection(context)
+        return client.list_volumes(self.conn, self.symmetrix_id)
 
     def add_trap_config(self, context, trap_config):
         pass
