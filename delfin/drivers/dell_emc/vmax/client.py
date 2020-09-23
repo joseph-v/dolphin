@@ -43,8 +43,13 @@ class VMAXClient(object):
         self.rest.establish_rest_session()
 
     def remove(self):
-        if self.rest:
-            self.rest.remove()
+        try:
+            if self.rest:
+                self.rest.remove()
+        except Exception as err:
+            msg = ("Failed to cleanup to VMAX driver: {}".format(err))
+            LOG.error(msg)
+            raise exception.DriverCleanupFailed()
 
     def init_connection(self, access_info):
         """ Given the access_info get a connection to VMAX storage """

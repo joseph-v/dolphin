@@ -45,7 +45,7 @@ class API(object):
         access_info = db.access_info_create(context, access_info)
         storage['id'] = access_info['storage_id']
         storage = db.storage_create(context, storage)
-        self.driver_manager.update_driver(storage['id'], driver)
+        driver.cleanup(context)
 
         LOG.info("Storage found successfully.")
         return storage
@@ -63,14 +63,14 @@ class API(object):
         helper.check_storage_consistency(context, storage_id, storage_new)
         access_info = db.access_info_update(context, storage_id, access_info)
         db.storage_update(context, storage_id, storage_new)
-        self.driver_manager.update_driver(storage_id, driver)
+        driver.cleanup(context)
 
         LOG.info("Access information updated successfully.")
         return access_info
 
     def remove_storage(self, context, storage_id):
         """Clear driver instance from driver factory."""
-        self.driver_manager.remove_driver(storage_id)
+        self.driver_manager.remove_driver(context, storage_id)
 
     def get_storage(self, context, storage_id):
         """Get storage device information from storage system"""
@@ -97,15 +97,26 @@ class API(object):
 
     def parse_alert(self, context, storage_id, alert):
         """Parse alert data got from snmp trap server."""
-        driver = self.driver_manager.get_driver(context, storage_id=storage_id)
-        return driver.parse_alert(context, alert)
+        driver = self.driver_manager.get_driver(context,
+                                                cache_on_load=False,
+                                                storage_id=storage_id)
+        parse_alert = driver.parse_alert(context, alert)
+        driver.cleanup(context)
+        return parse_alert
 
     def clear_alert(self, context, storage_id, sequence_number):
         """Clear alert from storage system."""
-        driver = self.driver_manager.get_driver(context, storage_id=storage_id)
+        driver = self.driver_manager.get_driver(context,
+                                                cache_on_load=False,
+                                                storage_id=storage_id)
         driver.clear_alert(context, sequence_number)
+        driver.cleanup(context)
 
     def list_alerts(self, context, storage_id, query_para=None):
         """List alert from storage system."""
-        driver = self.driver_manager.get_driver(context, storage_id=storage_id)
-        return driver.list_alerts(context, query_para)
+        driver = self.driver_manager.get_driver(context,
+                                                cache_on_load=False,
+                                                storage_id=storage_id)
+        alerts = driver.list_alerts(context, query_para)
+        driver.cleanup(context)
+        return alerts

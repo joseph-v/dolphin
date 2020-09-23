@@ -34,9 +34,14 @@ class OceanStorDriver(driver.StorageDriver):
         self.client.reset_connection(**kwargs)
 
     def cleanup(self, context):
-        if self.client:
-            self.client.remove()
-        self.storage_id = None
+        try:
+            if self.client:
+                self.client.remove()
+            self.storage_id = None
+        except Exception as err:
+            msg = ("Failed to cleanup to Oceanstor driver: {}".format(err))
+            LOG.error(msg)
+            raise exception.DriverCleanupFailed()
 
     def get_storage(self, context):
 

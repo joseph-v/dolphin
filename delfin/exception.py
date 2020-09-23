@@ -282,3 +282,7 @@ class StorageIsSyncing(Invalid):
 class InvalidIpOrPort(DelfinException):
     msg_fmt = _("Ip or Port Error.")
     code = 400
+
+
+class DriverCleanupFailed(DelfinException):
+    msg_fmt = _("Failed to cleanup driver.")
