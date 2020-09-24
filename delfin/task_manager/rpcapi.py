@@ -66,3 +66,10 @@ class TaskAPI(object):
                                  'sync_storage_alerts',
                                  storage_id=storage_id,
                                  query_para=query_para)
+
+    def clear_alert(self, context, storage_id, sequence_number):
+        call_context = self.client.prepare(version='1.0')
+        return call_context.cast(context,
+                                 'clear_alert',
+                                 storage_id=storage_id,
+                                 sequence_number=sequence_number)

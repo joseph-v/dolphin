@@ -73,7 +73,7 @@ class AlertController(wsgi.Controller):
     def delete(self, req, id, sequence_number):
         ctx = req.environ['delfin.context']
         _ = db.storage_get(ctx, id)
-        self.driver_manager.clear_alert(ctx, id, sequence_number)
+        self.task_rpcapi.clear_alert(ctx, id, sequence_number)
 
     @validation.schema(schema_alerts.post)
     @wsgi.response(200)

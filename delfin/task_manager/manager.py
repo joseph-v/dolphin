@@ -61,3 +61,8 @@ class TaskManager(manager.Manager):
         LOG.info('Alert sync called for storage id:{0}'
                  .format(storage_id))
         self.alert_sync.sync_alerts(context, storage_id, query_para)
+
+    def clear_alert(self, context, storage_id, sequence_number):
+        LOG.info('Clear alert called for storage id:{0}'
+                 .format(storage_id))
+        self.alert_sync.clear_alert(context, storage_id, sequence_number)
