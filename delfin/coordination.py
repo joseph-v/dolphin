@@ -41,7 +41,7 @@ coordination_opts = [
                help='The backend password to use '
                     'for distributed coordination.'),
     cfg.StrOpt('backend_server',
-               default='127.0.0.1:6379',
+               default='192.168.20.158:6379',
                help='The backend server for distributed coordination.'),
     cfg.IntOpt('expiration',
                default=100,
