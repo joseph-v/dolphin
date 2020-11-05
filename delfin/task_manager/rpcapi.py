@@ -82,3 +82,9 @@ class TaskAPI(object):
         return call_context.call(context,
                                  'register_storage',
                                  access_info=access_info)
+
+    def update_access_info(self, context, access_info):
+        call_context = self.client.prepare(version='1.0')
+        return call_context.call(context,
+                                 'update_access_info',
+                                 access_info=access_info)

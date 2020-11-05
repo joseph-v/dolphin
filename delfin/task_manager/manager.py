@@ -45,6 +45,7 @@ class TaskManager(manager.Manager):
 
     def __init__(self, service_name=None, *args, **kwargs):
         self.alert_sync = alerts.AlertSyncTask()
+        self.driver_api = driverapi.API()
         super(TaskManager, self).__init__(*args, **kwargs)
 
     def periodic_performance_collect(self):
@@ -127,8 +128,11 @@ class TaskManager(manager.Manager):
         device_obj.collect()
 
     def register_storage(self, context, access_info):
-        LOG.info('POC ++++ Register storage device:{0} {1}'
-                 .format(access_info['vendor'])
+        LOG.info('POC ++++ Register storage device:{0}'
                  .format(access_info['model']))
-        driver_api = driverapi.API()
-        return driver_api.discover_storage(context, access_info)
+        return self.driver_api.discover_storage(context, access_info)
+
+    def update_access_info(self, context, access_info):
+        LOG.info('POC ++++ Update access info for storage device:{0}'
+                 .format(access_info['model']))
+        return self.driver_api.update_access_info(context, access_info)

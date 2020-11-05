@@ -18,7 +18,7 @@ from delfin.api.common import wsgi
 from delfin.api.schemas import access_info as schema_access_info
 from delfin.api.views import access_info as access_info_viewer
 from delfin.common import constants
-from delfin.drivers import api as driverapi
+from delfin.task_manager import rpcapi as task_rpcapi
 
 
 class AccessInfoController(wsgi.Controller):
@@ -26,7 +26,7 @@ class AccessInfoController(wsgi.Controller):
     def __init__(self):
         super(AccessInfoController, self).__init__()
         self._view_builder = access_info_viewer.ViewBuilder()
-        self.driver_api = driverapi.API()
+        self.task_rpcapi = task_rpcapi.TaskAPI()
 
     def show(self, req, id):
         """Show access information by storage id."""
@@ -45,7 +45,7 @@ class AccessInfoController(wsgi.Controller):
                     access_info[access]['password'])
             if body.get(access):
                 access_info[access].update(body[access])
-        access_info = self.driver_api.update_access_info(ctxt, access_info)
+        access_info = self.task_rpcapi.update_access_info(ctxt, access_info)
         return self._view_builder.show(access_info)
 
 

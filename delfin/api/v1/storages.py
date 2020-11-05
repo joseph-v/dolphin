@@ -27,7 +27,6 @@ from delfin.api.common import wsgi
 from delfin.api.schemas import storages as schema_storages
 from delfin.api.views import storages as storage_view
 from delfin.common import constants
-from delfin.drivers import api as driverapi
 from delfin.i18n import _
 from delfin.task_manager import rpcapi as task_rpcapi
 from delfin.task_manager.tasks import resources
@@ -40,7 +39,6 @@ class StorageController(wsgi.Controller):
     def __init__(self):
         super().__init__()
         self.task_rpcapi = task_rpcapi.TaskAPI()
-        self.driver_api = driverapi.API()
         self.search_options = ['name', 'vendor', 'model', 'status',
                                'serial_number']
 
