@@ -86,8 +86,12 @@ class StorageController(wsgi.Controller):
         with lock:
             if self._storage_exist(ctxt, access_info_dict):
                 raise exception.StorageAlreadyExists()
-            storage = self.driver_api.discover_storage(ctxt,
-                                                       access_info_dict)
+            storage = self.task_rpcapi.register_storage(ctxt,
+                                                        access_info_dict)
+            LOG.info("POC ++++ Storage created")
+            LOG.info("POC ++++ storage_id = %s" % (storage['id']))
+            LOG.info("POC ++++ vendor = %s" % (storage['vendor']))
+            LOG.info("POC ++++ model = %s" % (storage['model']))
 
         # Registration success, sync resource collection for this storage
         try:

@@ -76,3 +76,9 @@ class TaskAPI(object):
                                  interval=interval,
                                  is_historic=is_historic,
                                  resource_task=resource_task)
+
+    def register_storage(self, context, access_info):
+        call_context = self.client.prepare(version='1.0')
+        return call_context.call(context,
+                                 'register_storage',
+                                 access_info=access_info)

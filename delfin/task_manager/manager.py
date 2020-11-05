@@ -23,6 +23,7 @@ from oslo_utils import importutils
 from delfin.common import constants, config
 from delfin import manager, exception
 from delfin.api.v1.performance import PerformanceController
+from delfin.drivers import api as driverapi
 from delfin.drivers import manager as driver_manager
 from delfin.task_manager.tasks import alerts
 
@@ -124,3 +125,10 @@ class TaskManager(manager.Manager):
         cls = importutils.import_class(resource_task)
         device_obj = cls(context, storage_id, interval, is_historic)
         device_obj.collect()
+
+    def register_storage(self, context, access_info):
+        LOG.info('POC ++++ Register storage device:{0} {1}'
+                 .format(access_info['vendor'])
+                 .format(access_info['model']))
+        driver_api = driverapi.API()
+        return driver_api.discover_storage(context, access_info)
