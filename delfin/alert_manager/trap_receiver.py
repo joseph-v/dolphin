@@ -31,6 +31,7 @@ from delfin.alert_manager import rpcapi
 from delfin.alert_manager import snmp_validator
 from delfin.common import constants as common_constants
 from delfin.db import api as db_api
+from delfin.drivers import manager as driver_manager
 from delfin.i18n import _
 
 LOG = log.getLogger(__name__)
@@ -59,6 +60,12 @@ class TrapReceiver(manager.Manager):
         if snmp_config_to_add:
             self.snmp_validator.validate(ctxt, snmp_config_to_add)
             self._add_snmp_config(ctxt, snmp_config_to_add)
+
+    def remove_storage_in_cache(self, context, storage_id):
+        LOG.info('POC ++++ ALERT Remove storage device for storage id:{0}'
+                 .format(storage_id))
+        drivers = driver_manager.DriverManager()
+        drivers.remove_driver(context, storage_id)
 
     def _add_snmp_config(self, ctxt, new_config):
         LOG.info("Start to add snmp trap config.")
