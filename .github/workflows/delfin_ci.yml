@@ -3,10 +3,14 @@ on:
   push:
     branches:
       - master
-      - github_action_ci
+      - test_github_actions
   pull_request:
     branches:
       - master
+  workflow_dispatch:
+    inputs:
+      tags:
+        description: 'Test scenario tags'
 
 jobs:
   build:
@@ -15,7 +19,7 @@ jobs:
       max-parallel: 4
       matrix:
         platform:
-          - ubuntu-16.04
+#          - ubuntu-16.04
           - ubuntu-18.04
         python-version: [ 3.6, 3.7, 3.8 ]
 
@@ -33,5 +37,11 @@ jobs:
           pip install tox codecov
       - name: Unit test with tox
         run: tox
+      - name: E2E test with Robot framework
+        run: |
+          sudo ./delfin/tests/e2e/test_e2e.sh
+          env:
+            LOGFILE: /tmp/delfin_install.log
+            PYTHONPATH: $(pwd)
       - name: Test coverage with  codecov
         run: codecov
