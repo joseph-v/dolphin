@@ -1,16 +1,16 @@
 name: Delfin CI
-on:
-  push:
-    branches:
-      - master
-      - test_github_actions
-  pull_request:
-    branches:
-      - master
-  workflow_dispatch:
-    inputs:
-      tags:
-        description: 'Test scenario tags'
+on: [push, pull_request, workflow_dispatch]
+#  push:
+#    branches:
+#      - master
+#      - test_github_actions
+#  pull_request:
+#    branches:
+#      - master
+#  workflow_dispatch:
+#    branches:
+#      - master
+#      - test_github_actions
 
 jobs:
   build:
@@ -19,12 +19,29 @@ jobs:
       max-parallel: 4
       matrix:
         platform:
-#          - ubuntu-16.04
+          - ubuntu-16.04
           - ubuntu-18.04
         python-version: [ 3.6, 3.7, 3.8 ]
 
+#    services:
+#      # Label used to access the service container
+#      redis:
+#        # Docker Hub image
+#        image: redis
+#        #
+#        ports:
+#          # Opens tcp port 6379 on the host and service container
+#          - 6379:6379
+#
+#      rabbitmq:
+#        image: rabbitmq:latest
+#        ports:
+#          - 5672/tcp
+#        options: --health-cmd "rabbitmqctl node_health_check" --health-interval 10s --health-timeout 5s --health-retries 5
+
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout delfin code
+        uses: actions/checkout@v2
       - name: Install Python version ${{ matrix.python-version }}
         uses: actions/setup-python@v1
         with:
@@ -37,11 +54,57 @@ jobs:
           pip install tox codecov
       - name: Unit test with tox
         run: tox
-      - name: E2E test with Robot framework
-        run: |
-          sudo ./delfin/tests/e2e/test_e2e.sh
-          env:
-            LOGFILE: /tmp/delfin_install.log
-            PYTHONPATH: $(pwd)
+#      - name: E2E test with Robot framework
+#        run: |
+#          sudo ./delfin/tests/e2e/test_e2e.sh
+#          env:
+#            LOGFILE: /tmp/delfin_install.log
+#            PYTHONPATH: $(pwd)
       - name: Test coverage with  codecov
         run: codecov
+      - name: E2E Testing - Add Test Driver to Delfin
+        run: |
+          str="\ \ \ \ \ \ \ \ \ \ \ \ 'test_vendor test_model = delfin.tests.e2e.testdriver:TestDriver',"
+          sed -i "/FakeStorageDriver',/ a $str" ./setup.py
+        shell: bash
+      - name: E2E Testing - Install RabbitMQ
+        uses: getong/rabbitmq-action@v1.2
+        with:
+          rabbitmq version: '3.8.2-management-alpine'
+          host port: 5672
+          rabbitmq user: 'guest'
+          rabbitmq password: 'guest'
+      - name: E2E Testing - Install Redis
+        uses: supercharge/redis-github-action@1.2.0
+        with:
+          redis-version: 6
+      - name: E2E Testing - Build and Deploy Delfin with Test driver
+        run: |
+          sudo mkdir -p /var/lib/delfin
+          sudo chmod 0777 /var/lib/delfin
+          sudo mkdir -p /etc/delfin
+          sudo chmod 0777 /etc/delfin
+          python3 setup.py install
+          cp ./etc/delfin/api-paste.ini /etc/delfin/
+          python3 ./script/create_db.py --config-file ./etc/delfin/delfin.conf
+          sleep 1
+          python3 ./delfin/cmd/task.py --config-file ./etc/delfin/delfin.conf > /tmp/task.log 2>&1 &
+          python3 ./delfin/cmd/alert.py --config-file ./etc/delfin/delfin.conf > /tmp/alert.log 2>&1 &
+          python3 ./delfin/cmd/api.py --config-file ./etc/delfin/delfin.conf > /tmp/api.log 2>&1 &
+        shell: bash
+      - name: E2E Testing - Run RobotFramework
+        run: |
+          sleep 3
+          pip install robotframework
+          pip install robotframework-requests
+          pip install robotframework-jsonlibrary
+          DELFIN_DIR=`pwd`
+          TOP_DIR="${DELFIN_DIR}/delfin/tests/e2e"
+          ORIG_PATH='"storage.json"'
+          FILE_PATH="${TOP_DIR}/testdriver/storage.json"
+          sed -i "s|${ORIG_PATH}|\"${FILE_PATH}\"|g" $TOP_DIR/test.json
+          sleep 1
+          robot delfin/tests/e2e
+        shell: bash
+
+

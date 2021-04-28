@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 # Copyright 2020 The SODA Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,6 +23,7 @@ BIN_DIR=/usr/bin/
 PROJECT_NAME='delfin'
 PROJECT_DIR=$(dirname "$0")
 log=delfin::log
+
 
 check_python(){
     py_ver=$(python3 -V)
@@ -66,7 +67,7 @@ check_install_sqlite(){
         # Install sqlite
         if [ ${apt_update_done} -eq 0 ]; then
             ${apt_update_command}
-            apt_update_done=1
+            apt_update_done=0
         fi
         sudo apt-get -y install sqlite3
     fi
@@ -94,9 +95,13 @@ check_install_rabbitmq(){
         fi
         if [ ${apt_update_done} -eq 0 ]; then
             ${apt_update_command}
-            apt_update_done=1
+            apt_update_done=0
         fi
         sudo apt-get -y install rabbitmq-server
+        echo "---------------------------------------jv1---------------------------------------"
+        sudo systemctl status rabbitmq-server.service
+        sudo journalctl -xe
+        echo "---------------------------------------jv2---------------------------------------"
     fi
     mq_status=$(systemctl is-active --quiet rabbitmq-server.service)
     if [ $? -eq 0 ]; then
@@ -113,7 +118,7 @@ check_install_redis(){
     else
         if [ ${apt_update_done} -eq 0 ]; then
             ${apt_update_command}
-            apt_update_done=1
+            apt_update_done=0
         fi
         sudo apt -y install redis-server
     fi
