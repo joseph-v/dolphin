@@ -49,6 +49,41 @@ class API(object):
         LOG.info("Storage found successfully.")
         return storage
 
+    def discover_storages(self, context, access_info):
+        """Discover a centralized_manager system with access information."""
+        print("------CM-------: In discover cm")
+        helper.encrypt_password(context, access_info)
+        if 'driver_id' not in access_info:
+            access_info['driver_id'] = six.text_type(
+                uuidutils.generate_uuid())
+
+        driver = self.driver_manager.get_driver(context,
+                                                cache_on_load=False,
+                                                **access_info)
+        storages = driver.get_storages(context)
+
+        # print ("---JVP-------, storages", storages)
+
+        # Need to validate storages response from driver
+        storages_list = []
+        for storage in storages:
+            helper.check_storage_repetition(context, storage)
+            storage['id'] = six.text_type(
+                uuidutils.generate_uuid())
+            access_info['storage_id'] = storage['id']
+            db.access_info_create(context, access_info)
+            storage_ret = db.storage_create(context, storage)
+            storages_list.append(storage_ret)
+        LOG.info("Storages from Centralized Mgr found successfully.")
+        cm = {
+            "driver_id": access_info['driver_id'],
+            "resources": {
+                "storages": storages
+            }
+        }
+        cm = db.centralized_manager_create(context, cm)
+        return cm
+
     def update_access_info(self, context, access_info):
         """Validate and update access information."""
         helper.encrypt_password(context, access_info)
@@ -68,7 +103,7 @@ class API(object):
 
     def remove_storage(self, context, storage_id):
         """Clear driver instance from driver factory."""
-        self.driver_manager.remove_driver(storage_id)
+        self.driver_manager.remove_driver(context, storage_id)
 
     def get_storage(self, context, storage_id):
         """Get storage device information from storage system"""
@@ -78,49 +113,49 @@ class API(object):
     def list_storage_pools(self, context, storage_id):
         """List all storage pools from storage system."""
         driver = self.driver_manager.get_driver(context, storage_id=storage_id)
-        return driver.list_storage_pools(context)
+        return driver.list_storage_pools(context, storage_id)
 
     def list_volumes(self, context, storage_id):
         """List all storage volumes from storage system."""
         driver = self.driver_manager.get_driver(context, storage_id=storage_id)
-        return driver.list_volumes(context)
+        return driver.list_volumes(context, storage_id)
 
     def list_controllers(self, context, storage_id):
         """List all storage controllers from storage system."""
 
         driver = self.driver_manager.get_driver(context, storage_id=storage_id)
-        return driver.list_controllers(context)
+        return driver.list_controllers(context, storage_id)
 
     def list_ports(self, context, storage_id):
         """List all ports from storage system."""
 
         driver = self.driver_manager.get_driver(context, storage_id=storage_id)
-        return driver.list_ports(context)
+        return driver.list_ports(context, storage_id)
 
     def list_disks(self, context, storage_id):
         """List all disks from storage system."""
         driver = self.driver_manager.get_driver(context, storage_id=storage_id)
-        return driver.list_disks(context)
+        return driver.list_disks(context, storage_id)
 
     def list_quotas(self, context, storage_id):
         """List all quotas from storage system."""
         driver = self.driver_manager.get_driver(context, storage_id=storage_id)
-        return driver.list_quotas(context)
+        return driver.list_quotas(context, storage_id)
 
     def list_filesystems(self, context, storage_id):
         """List all filesystems from storage system."""
         driver = self.driver_manager.get_driver(context, storage_id=storage_id)
-        return driver.list_filesystems(context)
+        return driver.list_filesystems(context, storage_id)
 
     def list_qtrees(self, context, storage_id):
         """List all qtrees from storage system."""
         driver = self.driver_manager.get_driver(context, storage_id=storage_id)
-        return driver.list_qtrees(context)
+        return driver.list_qtrees(context, storage_id)
 
     def list_shares(self, context, storage_id):
         """List all shares from storage system."""
         driver = self.driver_manager.get_driver(context, storage_id=storage_id)
-        return driver.list_shares(context)
+        return driver.list_shares(context, storage_id)
 
     def add_trap_config(self, context, storage_id, trap_config):
         """Config the trap receiver in storage system."""
@@ -161,4 +196,4 @@ class API(object):
     def get_capabilities(self, context, storage_id,):
         """Get capabilities from supported driver"""
         driver = self.driver_manager.get_driver(context, storage_id=storage_id)
-        return driver.get_capabilities(context)
+        return driver.get_capabilities(context, storage_id)

@@ -158,6 +158,10 @@ class StorageNotFound(NotFound):
     msg_fmt = _("Storage {0} could not be found.")
 
 
+class CentralizedManagerNotFound(NotFound):
+    msg_fmt = _("CentralizedManager {0} could not be found.")
+
+
 class StorageBackendNotFound(NotFound):
     msg_fmt = _("Storage backend could not be found.")
 

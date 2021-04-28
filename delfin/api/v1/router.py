@@ -17,6 +17,7 @@ from delfin.api import extensions
 from delfin.api.v1 import access_info
 from delfin.api.v1 import alert_source
 from delfin.api.v1 import alerts
+from delfin.api.v1 import centralized_managers
 from delfin.api.v1 import controllers
 from delfin.api.v1 import disks
 from delfin.api.v1 import filesystems
@@ -36,6 +37,8 @@ class APIRouter(common.APIRouter):
     def _setup_routes(self, mapper):
         mapper.redirect("", "/")
 
+        print("------CM-------: router setup root ")
+
         self.resources['storages'] = storages.create_resource()
         mapper.resource("storage", "storages",
                         controller=self.resources['storages'],
@@ -50,6 +53,12 @@ class APIRouter(common.APIRouter):
                        controller=self.resources['storages'],
                        action="get_capabilities",
                        conditions={"method": ["GET"]})
+
+        self.resources['centralized_manager'] =\
+            centralized_managers.create_resource()
+        mapper.resource("centralized_manager", "centralized_managers",
+                        controller=self.resources['centralized_manager'],
+                        member={'sync': 'POST'})
 
         self.resources['access_info'] = access_info.create_resource()
         mapper.connect("storages", "/storages/{id}/access-info",
