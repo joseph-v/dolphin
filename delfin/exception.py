@@ -125,6 +125,10 @@ class StorageAlreadyExists(Invalid):
     msg_fmt = _("Storage already exists.")
 
 
+class CMAlreadyExists(Invalid):
+    msg_fmt = _("Centralized Manager already exists.")
+
+
 class InvalidSNMPConfig(Invalid):
     msg_fmt = _("Invalid SNMP configuration: {0}")
 

@@ -44,7 +44,8 @@ class CentralizedManagerController(wsgi.Controller):
         super(CentralizedManagerController, self).__init__()
         self.task_rpcapi = task_rpcapi.TaskAPI()
         self.driver_api = driverapi.API()
-        self.search_options = ['driver_id']
+        self.search_options = ['driver_id', 'name', 'vendor',
+                               'model', 'status', 'serial_number']
 
     def _get_cms_search_options(self):
         """Return storage_pools search options allowed ."""
@@ -65,6 +66,11 @@ class CentralizedManagerController(wsgi.Controller):
                                                   filters=access_info_dict)
         for _access_info in access_info_list:
             try:
+                cm = db.storage_get(context, _access_info['driver_id'])
+                if cm:
+                    LOG.error("CM %s has same access "
+                              "information." % cm['driver_id'])
+                    return True
                 storage = db.storage_get(context, _access_info['storage_id'])
                 if storage:
                     LOG.error("Storage %s has same access "
@@ -118,7 +124,7 @@ class CentralizedManagerController(wsgi.Controller):
 
         with lock:
             if self._storage_exist(ctxt, access_info_dict):
-                raise exception.StorageAlreadyExists()
+                raise exception.CMAlreadyExists()
             cm = self.driver_api.discover_storages(ctxt,
                                                    access_info_dict)
 
@@ -181,12 +187,43 @@ class CentralizedManagerController(wsgi.Controller):
             self.task_rpcapi.remove_storage_in_cache(ctxt, storage['id'])
 
     @wsgi.response(202)
+    def sync_all(self, req):
+        """
+        :param req:
+        :return: it's a Asynchronous call. so return 202 on success. sync_all
+        api performs the storage device info, storage_pool,
+         volume etc. tasks on each registered storage device.
+        """
+        ctxt = req.environ['delfin.context']
+
+        storages = db.storage_get_all(ctxt)
+        LOG.debug("Total {0} registered storages found in database".
+                  format(len(storages)))
+        resource_count = len(resources.StorageResourceTask.__subclasses__())
+
+        for storage in storages:
+            try:
+                set_synced_if_ok(ctxt, storage['id'], resource_count)
+            except exception.InvalidInput as e:
+                LOG.warn('Can not start new sync task for %s, reason is %s'
+                         % (storage['id'], e.msg))
+                continue
+            else:
+                for subclass in \
+                        resources.StorageResourceTask.__subclasses__():
+                    self.task_rpcapi.sync_storage_resource(
+                        ctxt,
+                        storage['id'],
+                        subclass.__module__ + '.' + subclass.__name__)
+
+    @wsgi.response(202)
     def sync(self, req, id):
         """
         :param req:
         :param id:
         :return:
         """
+        print("------CM-------: SYNC ")
         ctxt = req.environ['delfin.context']
         storage = db.storage_get(ctxt, id)
         resource_count = len(resources.StorageResourceTask.__subclasses__())

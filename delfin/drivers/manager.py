@@ -82,16 +82,27 @@ class DriverManager(stevedore.ExtensionManager):
                     context, access_info['driver_id'])
 
     def _get_driver_obj(self, context, cache_on_load=True, **kwargs):
-        if not kwargs.get('driver_id') and kwargs.get('storage_id'):
-            access_info = db.access_info_get(
-                context, kwargs.get('storage_id')).to_dict()
-            kwargs['driver_id'] = access_info['driver_id']
-        if not cache_on_load or not kwargs.get('driver_id'):
+        # print('----------------OBJ---- driver_id', kwargs.get('driver_id'))
+        # print('----------------OBJ---- storage_id', kwargs.get('storage_id'))
+        # if not kwargs.get('driver_id') and kwargs.get('storage_id'):
+        #     access_info = db.access_info_get(
+        #         context, kwargs.get('storage_id')).to_dict()
+        #     kwargs['driver_id'] = access_info['driver_id']
+        print('----------------OBJ---- cache_on_load', cache_on_load)
+        print('----------------OBJ---- driver_id', kwargs.get('driver_id'))
+        print('----------------OBJ---- storage_id', kwargs.get('storage_id'))
+        if not cache_on_load or (not kwargs.get('storage_id') and not kwargs.get('driver_id')):
             if kwargs['verify']:
                 ssl_utils.reload_certificate(kwargs['verify'])
             cls = self._get_driver_cls(**kwargs)
             return cls(**kwargs)
 
+        if not kwargs.get('driver_id') and kwargs.get('storage_id'):
+            access_info = db.access_info_get(
+                context, kwargs.get('storage_id')).to_dict()
+            kwargs['driver_id'] = access_info['driver_id']
+
+        print('----------------OBJ---- driver_id', kwargs.get('driver_id'))
         if kwargs['driver_id'] in self.driver_factory:
             return self.driver_factory[kwargs['driver_id']]
 

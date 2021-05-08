@@ -39,6 +39,16 @@ class AccessInfoController(wsgi.Controller):
         """Update storage access information."""
         ctxt = req.environ.get('delfin.context')
         access_info = db.access_info_get(ctxt, id)
+        print("access info for _id=", id)
+        print("access info for storage_id=", access_info.get("storage_id"))
+        print("access info for driver_id=", access_info.get("driver_id"))
+        if not access_info:
+            ai_list = db.access_info_get_all(
+                ctxt, filters={"driver_id": id})
+            if len(ai_list) == 1:
+                access_info = ai_list[0]
+        print("access info for storage_id=", access_info.get("storage_id"))
+        print("access info for driver_id=", access_info.get("driver_id"))
         for access in constants.ACCESS_TYPE:
             if access_info.get(access):
                 access_info[access]['password'] = cryptor.decode(
