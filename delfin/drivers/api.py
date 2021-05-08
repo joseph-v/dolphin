@@ -18,6 +18,8 @@ from oslo_log import log
 from oslo_utils import uuidutils
 
 from delfin import db
+from delfin.common import constants
+from delfin import cryptor
 from delfin.drivers import helper
 from delfin.drivers import manager
 
@@ -53,16 +55,36 @@ class API(object):
         """Discover a centralized_manager system with access information."""
         print("------CM-------: In discover cm")
         helper.encrypt_password(context, access_info)
-        if 'driver_id' not in access_info:
-            access_info['driver_id'] = six.text_type(
-                uuidutils.generate_uuid())
+        if 'storage_id' not in access_info:
+            cm_id = six.text_type(uuidutils.generate_uuid())
+            access_info['storage_id'] = cm_id
+        encode_str = access_info["vendor"] + access_info["model"]
+        access_rest = access_info.get('rest')
+        access_ssh = access_info.get('ssh')
+        access_smis = access_info.get('smis')
+        for access in [access_rest, access_ssh, access_smis]:
+            if access:
+                encode_str = encode_str +\
+                             access["host"] +\
+                             str(access["port"])
+        print("------CM-------: encode_str ", encode_str)
+        cm = {
+            "id": cm_id,
+            "derived_id": cryptor.encode(encode_str),
+            "vendor": access_info["vendor"],
+            "model": access_info["model"],
+            "resources": {
+                "storages": None
+            }
+        }
+        print("------CM-------: call helper for cm repeatation", cm)
+
+        helper.check_cm_repetition(context, cm)
 
         driver = self.driver_manager.get_driver(context,
                                                 cache_on_load=False,
                                                 **access_info)
         storages = driver.get_storages(context)
-
-        # print ("---JVP-------, storages", storages)
 
         # Need to validate storages response from driver
         storages_list = []
@@ -75,12 +97,9 @@ class API(object):
             storage_ret = db.storage_create(context, storage)
             storages_list.append(storage_ret)
         LOG.info("Storages from Centralized Mgr found successfully.")
-        cm = {
-            "driver_id": access_info['driver_id'],
-            "resources": {
-                "storages": storages
-            }
-        }
+        access_info['storage_id'] = cm_id
+        db.access_info_create(context, access_info)
+        cm['resources']['storages'] = storages
         cm = db.centralized_manager_create(context, cm)
         return cm
 
@@ -103,7 +122,7 @@ class API(object):
 
     def remove_storage(self, context, storage_id):
         """Clear driver instance from driver factory."""
-        self.driver_manager.remove_driver(context, storage_id)
+        self.driver_manager.remove_driver(storage_id)
 
     def get_storage(self, context, storage_id):
         """Get storage device information from storage system"""
@@ -113,49 +132,49 @@ class API(object):
     def list_storage_pools(self, context, storage_id):
         """List all storage pools from storage system."""
         driver = self.driver_manager.get_driver(context, storage_id=storage_id)
-        return driver.list_storage_pools(context, storage_id)
+        return driver.list_storage_pools(context)
 
     def list_volumes(self, context, storage_id):
         """List all storage volumes from storage system."""
         driver = self.driver_manager.get_driver(context, storage_id=storage_id)
-        return driver.list_volumes(context, storage_id)
+        return driver.list_volumes(context)
 
     def list_controllers(self, context, storage_id):
         """List all storage controllers from storage system."""
 
         driver = self.driver_manager.get_driver(context, storage_id=storage_id)
-        return driver.list_controllers(context, storage_id)
+        return driver.list_controllers(context)
 
     def list_ports(self, context, storage_id):
         """List all ports from storage system."""
 
         driver = self.driver_manager.get_driver(context, storage_id=storage_id)
-        return driver.list_ports(context, storage_id)
+        return driver.list_ports(context)
 
     def list_disks(self, context, storage_id):
         """List all disks from storage system."""
         driver = self.driver_manager.get_driver(context, storage_id=storage_id)
-        return driver.list_disks(context, storage_id)
+        return driver.list_disks(context)
 
     def list_quotas(self, context, storage_id):
         """List all quotas from storage system."""
         driver = self.driver_manager.get_driver(context, storage_id=storage_id)
-        return driver.list_quotas(context, storage_id)
+        return driver.list_quotas(context)
 
     def list_filesystems(self, context, storage_id):
         """List all filesystems from storage system."""
         driver = self.driver_manager.get_driver(context, storage_id=storage_id)
-        return driver.list_filesystems(context, storage_id)
+        return driver.list_filesystems(context)
 
     def list_qtrees(self, context, storage_id):
         """List all qtrees from storage system."""
         driver = self.driver_manager.get_driver(context, storage_id=storage_id)
-        return driver.list_qtrees(context, storage_id)
+        return driver.list_qtrees(context)
 
     def list_shares(self, context, storage_id):
         """List all shares from storage system."""
         driver = self.driver_manager.get_driver(context, storage_id=storage_id)
-        return driver.list_shares(context, storage_id)
+        return driver.list_shares(context)
 
     def add_trap_config(self, context, storage_id, trap_config):
         """Config the trap receiver in storage system."""
@@ -196,4 +215,4 @@ class API(object):
     def get_capabilities(self, context, storage_id,):
         """Get capabilities from supported driver"""
         driver = self.driver_manager.get_driver(context, storage_id=storage_id)
-        return driver.get_capabilities(context, storage_id)
+        return driver.get_capabilities(context)

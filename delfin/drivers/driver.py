@@ -26,6 +26,7 @@ class StorageDriver(object):
             in memory, so suggest each driver use them to get session
             instead of save them in memory directly.
         """
+        self.storage_id = kwargs.get('storage_id', None)
 
     @abc.abstractmethod
     def reset_connection(self, context, **kwargs):
@@ -42,27 +43,27 @@ class StorageDriver(object):
         pass
 
     @abc.abstractmethod
-    def list_storage_pools(self, context, storage_id):
+    def list_storage_pools(self, context):
         """List all storage pools from storage system."""
         pass
 
     @abc.abstractmethod
-    def list_volumes(self, context, storage_id):
+    def list_volumes(self, context):
         """List all storage volumes from storage system."""
         pass
 
     @abc.abstractmethod
-    def list_controllers(self, context, storage_id):
+    def list_controllers(self, context):
         """List all storage controllers from storage system."""
         pass
 
     @abc.abstractmethod
-    def list_ports(self, context, storage_id):
+    def list_ports(self, context):
         """List all ports from storage system."""
         pass
 
     @abc.abstractmethod
-    def list_disks(self, context, storage_id):
+    def list_disks(self, context):
         """List all disks from storage system."""
         pass
 
@@ -157,27 +158,27 @@ class StorageDriver(object):
         """
         pass
 
-    def list_quotas(self, context, storage_id):
+    def list_quotas(self, context):
         """List all quotas from storage system."""
         raise NotImplementedError(
             "Driver API list_quotas() is not Implemented")
 
-    def list_filesystems(self, context, storage_id):
+    def list_filesystems(self, context):
         """List all filesystems from storage system."""
         raise NotImplementedError(
             "Driver API list_filesystems() is not Implemented")
 
-    def list_qtrees(self, context, storage_id):
+    def list_qtrees(self, context):
         """List all qtrees from storage system."""
         raise NotImplementedError(
             "Driver API list_qtrees() is not Implemented")
 
-    def list_shares(self, context, storage_id):
+    def list_shares(self, context):
         """List all shares from storage system."""
         raise NotImplementedError(
             "Driver API list_shares() is not Implemented")
 
     @staticmethod
-    def get_capabilities(context, storage_id):
+    def get_capabilities(context):
         """Get capability of driver"""
         pass

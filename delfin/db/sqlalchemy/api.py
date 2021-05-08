@@ -318,8 +318,8 @@ def storage_delete(context, storage_id):
 
 def centralized_manager_create(context, values):
     """Add a centralized_manager device from the values dictionary."""
-    if not values.get('driver_id'):
-        values['driver_id'] = uuidutils.generate_uuid()
+    if not values.get('id'):
+        values['id'] = uuidutils.generate_uuid()
 
     centralized_manager_ref = models.CentralizedManager()
     centralized_manager_ref.update(values)
@@ -329,7 +329,7 @@ def centralized_manager_create(context, values):
         session.add(centralized_manager_ref)
 
     return _centralized_manager_get(context,
-                                    centralized_manager_ref['driver_id'],
+                                    centralized_manager_ref['id'],
                                     session=session)
 
 
@@ -339,7 +339,7 @@ def centralized_manager_update(context, centralized_manager_id, values):
     with session.begin():
         query = _centralized_manager_get_query(context, session)
         result = query.filter_by(
-            driver_id=centralized_manager_id).update(values)
+            id=centralized_manager_id).update(values)
     return result
 
 
@@ -350,7 +350,7 @@ def centralized_manager_get(context, centralized_manager_id):
 
 def _centralized_manager_get(context, centralized_manager_id, session=None):
     result = (_centralized_manager_get_query(context, session=session)
-              .filter_by(driver_id=centralized_manager_id)
+              .filter_by(id=centralized_manager_id)
               .first())
 
     if not result:
@@ -403,7 +403,7 @@ def centralized_manager_delete(context, centralized_manager_id):
     """Delete a centralized_manager device."""
     delete_info = {'deleted': True, 'deleted_at': timeutils.utcnow()}
     _centralized_manager_get_query(context).filter_by(
-        driver_id=centralized_manager_id).update(delete_info)
+        id=centralized_manager_id).update(delete_info)
 
 
 def _volume_get_query(context, session=None):

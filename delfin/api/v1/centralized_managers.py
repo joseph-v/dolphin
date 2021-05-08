@@ -171,6 +171,7 @@ class CentralizedManagerController(wsgi.Controller):
         ctxt = req.environ['delfin.context']
         print("------CM-------: DELETE ")
         cm = db.centralized_manager_get(ctxt, id)
+        db.centralized_manager_delete(ctxt, id)
         for storage in cm['resources']['storages']:
             for subclass in resources.StorageResourceTask.__subclasses__():
                 self.task_rpcapi.remove_storage_resource(

@@ -47,6 +47,23 @@ def check_storage_repetition(context, storage):
         raise exception.StorageAlreadyExists()
 
 
+def check_cm_repetition(context, cm):
+    if not cm:
+        raise exception.CentralizedManagerNotFound()
+
+    if not cm.get('derived_id'):
+        msg = _("derived_id should be provided by CM.")
+        raise exception.InvalidResults(msg)
+
+    filters = dict(derived_id=cm['derived_id'])
+    cm_list = db.centralized_manager_get_all(context, filters=filters)
+    if cm_list:
+        msg = (_("Failed to register CM. Reason: same derived_id: "
+                 "%s detected.") % cm['derived_id'])
+        LOG.error(msg)
+        raise exception.CentralizedManagerAlreadyExists()
+
+
 def check_storage_consistency(context, storage_id, storage_new):
     """Check storage response returned by driver whether it matches the
     storage stored in database.
